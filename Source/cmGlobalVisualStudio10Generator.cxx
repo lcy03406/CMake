@@ -109,6 +109,7 @@ cmGlobalVisualStudio10Generator::cmGlobalVisualStudio10Generator(
   this->SystemIsWindowsCE = false;
   this->SystemIsWindowsPhone = false;
   this->SystemIsWindowsStore = false;
+  this->SystemIsAndroidMDD = false;
   this->MSBuildCommandInitialized = false;
   {
     std::string envPlatformToolset;
@@ -411,8 +412,13 @@ bool cmGlobalVisualStudio10Generator::InitializeSystem(cmMakefile* mf)
     if (!this->InitializeWindowsStore(mf)) {
       return false;
     }
-  } else if (this->SystemName == "Android") {
-    if (this->DefaultPlatformName != "Win32") {
+  } else if (this->SystemName == "VCMDDAndroid") {
+    this->SystemIsAndroidMDD = true;
+    if(!this->InitializeAndroidMDD(mf)) {
+      return false;
+    }
+  } else if(this->SystemName == "Android") {
+    if(this->DefaultPlatformName != "Win32") {
       std::ostringstream e;
       e << "CMAKE_SYSTEM_NAME is 'Android' but CMAKE_GENERATOR "
         << "specifies a platform too: '" << this->GetName() << "'";
@@ -472,6 +478,15 @@ bool cmGlobalVisualStudio10Generator::InitializeWindowsStore(cmMakefile* mf)
   return false;
 }
 
+bool cmGlobalVisualStudio10Generator::InitializeAndroidMDD(cmMakefile* mf)
+{
+    std::ostringstream e;
+    e << this->GetName() << " does not support Android MDD.";
+    mf->IssueMessage(cmake::FATAL_ERROR, e.str());
+    return false;
+}
+
+//----------------------------------------------------------------------------
 bool cmGlobalVisualStudio10Generator::SelectWindowsPhoneToolset(
   std::string& toolset) const
 {
@@ -1048,6 +1063,26 @@ std::string cmGlobalVisualStudio10Generator::GetInstalledNsightTegraVersion()
     "Version",
     version, cmSystemTools::KeyWOW64_32);
   return version;
+}
+
+const char* cmGlobalVisualStudio10Generator::GetAndroidMDDVersion()
+{
+  if (this->SystemVersion == "")
+    {
+    return "1.0";
+    }
+  return this->SystemVersion.c_str();
+}
+
+bool cmGlobalVisualStudio10Generator::IsAndroidMDDInstalled()
+{
+  std::string ideVersion = GetIDEVersion();
+  std::string installed;
+  cmSystemTools::ReadRegistryValue(
+    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\DevDiv\\MDD\\Servicing\\" +
+    ideVersion + "\\CPlusPlusCore;"
+    "Install", installed, cmSystemTools::KeyWOW64_32);
+  return installed == "1";
 }
 
 cmIDEFlagTable const* cmGlobalVisualStudio10Generator::GetClFlagTable() const

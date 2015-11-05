@@ -296,3 +296,8 @@ std::string cmGlobalVisualStudio15Generator::FindDevEnvCommand()
   devenv = "devenv.com";
   return devenv;
 }
+
+bool cmGlobalVisualStudio15Generator::IsAndroidMDDInstalled()
+{
+  return true;
+}

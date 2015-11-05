@@ -57,6 +57,8 @@ protected:
   std::string FindMSBuildCommand() override;
   std::string FindDevEnvCommand() override;
 
+  bool IsAndroidMDDInstalled() override;
+
 private:
   class Factory;
   mutable cmVSSetupAPIHelper vsSetupAPIHelper;

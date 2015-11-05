@@ -91,6 +91,10 @@ public:
   /** Return true if building for WindowsPhone */
   bool TargetsWindowsPhone() const { return this->SystemIsWindowsPhone; }
 
+  /** Return true if building for Android */
+  bool TargetsAndroidMDD() const
+    { return this->SystemIsAndroidMDD; }
+
   /** Return true if building for WindowsStore */
   bool TargetsWindowsStore() const { return this->SystemIsWindowsStore; }
 
@@ -115,6 +119,9 @@ public:
 
   static std::string GetInstalledNsightTegraVersion();
 
+  const char* GetAndroidMDDVersion();
+  virtual bool IsAndroidMDDInstalled();
+
   cmIDEFlagTable const* GetClFlagTable() const;
   cmIDEFlagTable const* GetCSharpFlagTable() const;
   cmIDEFlagTable const* GetRcFlagTable() const;
@@ -132,6 +139,7 @@ protected:
   virtual bool InitializeWindowsCE(cmMakefile* mf);
   virtual bool InitializeWindowsPhone(cmMakefile* mf);
   virtual bool InitializeWindowsStore(cmMakefile* mf);
+  virtual bool InitializeAndroidMDD(cmMakefile* mf);
 
   virtual bool ProcessGeneratorToolsetField(std::string const& key,
                                             std::string const& value);
@@ -165,6 +173,8 @@ protected:
   bool SystemIsWindowsCE;
   bool SystemIsWindowsPhone;
   bool SystemIsWindowsStore;
+  bool SystemIsAndroidMDD;
+
 
 private:
   class Factory;

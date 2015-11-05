@@ -225,6 +225,9 @@ public:
       enabled.  */
   bool IsExecutableWithExports() const;
 
+  /** Return whether this target is an Android MDD target.  */
+  bool IsAndroidMDD() const { return this->AndroidMDD; }
+
   /** Return whether this target is a shared library Framework on
       Apple.  */
   bool IsFrameworkOnApple() const;
@@ -324,6 +327,7 @@ private:
   bool HaveInstallRule;
   bool DLLPlatform;
   bool IsAndroid;
+  bool AndroidMDD;
   bool IsImportedTarget;
   bool ImportedGloballyVisible;
   bool BuildInterfaceIncludesAppended;

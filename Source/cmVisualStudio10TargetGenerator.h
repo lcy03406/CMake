@@ -63,6 +63,8 @@ private:
   void WriteExtraSource(Elem& e1, cmSourceFile const* sf);
   void WriteNsightTegraConfigurationValues(Elem& e1,
                                            std::string const& config);
+  void WriteAndroidMDDConfigurationValues(Elem& e1,
+                                          std::string const& config);
   void WriteSource(Elem& e2, std::string const& tool, cmSourceFile const* sf);
   void WriteExcludeFromBuild(Elem& e2,
                              std::vector<size_t> const& exclude_configs);
@@ -203,6 +205,7 @@ private:
   bool Managed;
   bool NsightTegra;
   unsigned int NsightTegraVersion[4];
+  bool AndroidMDD;
   bool TargetCompileAsWinRT;
   std::set<std::string> IPOEnabledConfigurations;
   std::set<std::string> SpectreMitigationConfigurations;

@@ -244,6 +244,7 @@ cmVisualStudio10TargetGenerator::cmVisualStudio10TargetGenerator(
   sscanf(gg->GetNsightTegraVersion().c_str(), "%u.%u.%u.%u",
          &this->NsightTegraVersion[0], &this->NsightTegraVersion[1],
          &this->NsightTegraVersion[2], &this->NsightTegraVersion[3]);
+  this->AndroidMDD = gg->TargetsAndroidMDD();
   this->MSTools = !this->NsightTegra;
   this->Managed = false;
   this->TargetCompileAsWinRT = false;
@@ -464,23 +465,29 @@ void cmVisualStudio10TargetGenerator::Generate()
       const char* vsGlobalKeyword =
         this->GeneratorTarget->GetProperty("VS_GLOBAL_KEYWORD");
       if (!vsGlobalKeyword) {
-        e1.Element("Keyword", "Win32Proj");
+        if (!this->AndroidMDD) {
+          e1.Element("Keyword", "Win32Proj");
+    } else {
+          e1.Element("Keyword", "Android");
+    }
       } else {
         e1.Element("Keyword", vsGlobalKeyword);
       }
 
-      const char* vsGlobalRootNamespace =
-        this->GeneratorTarget->GetProperty("VS_GLOBAL_ROOTNAMESPACE");
-      if (vsGlobalRootNamespace) {
-        e1.Element("RootNamespace", vsGlobalRootNamespace);
-      }
-
-      e1.Element("Platform", this->Platform);
       const char* projLabel =
         this->GeneratorTarget->GetProperty("PROJECT_LABEL");
       if (!projLabel) {
         projLabel = this->Name.c_str();
       }
+      const char* vsGlobalRootNamespace =
+        this->GeneratorTarget->GetProperty("VS_GLOBAL_ROOTNAMESPACE");
+      if (vsGlobalRootNamespace) {
+        e1.Element("RootNamespace", vsGlobalRootNamespace);
+      } else if (this->AndroidMDD) {
+        e1.Element("RootNamespace", cmVS10EscapeXML(projLabel));
+      }
+
+      e1.Element("Platform", this->Platform);
       e1.Element("ProjectName", projLabel);
       {
         // TODO: add deprecation warning for VS_* property?
@@ -551,6 +558,7 @@ void cmVisualStudio10TargetGenerator::Generate()
         e1.Element("OutputType", outputType);
         e1.Element("AppDesignerFolder", "Properties");
       }
+      e1.Element("VisualStudioCMakeGeneratedProject", "true");
     }
 
     switch (this->ProjectType) {
@@ -1069,12 +1077,14 @@ void cmVisualStudio10TargetGenerator::WriteProjectConfigurationValues(Elem& e0)
       e1.Element("ConfigurationType", configType);
     }
 
-    if (this->MSTools) {
+    if (this->MSTools && !this->AndroidMDD) {
       if (!this->Managed) {
         this->WriteMSToolConfigurationValues(e1, c);
       } else {
         this->WriteMSToolConfigurationValuesManaged(e1, c);
       }
+    } else if (this->AndroidMDD) {
+      this->WriteAndroidMDDConfigurationValues(e1, c);
     } else if (this->NsightTegra) {
       this->WriteNsightTegraConfigurationValues(e1, c);
     }
@@ -1201,6 +1211,40 @@ void cmVisualStudio10TargetGenerator::WriteNsightTegraConfigurationValues(
     e1.Element("AndroidStlType", stlType);
   }
 }
+
+void cmVisualStudio10TargetGenerator::WriteAndroidMDDConfigurationValues(
+  Elem& e1, std::string const& config)
+{
+  if (strcmpi(config.c_str(), "Debug") == 0) {
+    e1.Element("UseDebugLibraries", "true");
+  } else {
+    e1.Element("UseDebugLibraries", "false");
+  }
+  cmGlobalVisualStudio10Generator* gg = this->GlobalGenerator;
+  
+  if (const char* toolset =
+        this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_PLATFORM_TOOLSET")) {
+    e1.Element("PlatformToolset", cmVS10EscapeXML(toolset));
+  } else if (const char* toolset = gg->GetPlatformToolset()) {
+    e1.Element("PlatformToolset", cmVS10EscapeXML(toolset));
+  }
+
+  if (const char* apiLevel =
+        this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_API_LEVEL")) {
+    e1.Element("AndroidAPILevel", cmVS10EscapeXML(apiLevel));
+  } else if(const char* api = this->GeneratorTarget->GetProperty("ANDROID_API")) {
+    e1.Element("AndroidAPILevel", "android-" + std::string(api));
+  }
+
+  if (const char* useOfStl =
+        this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_USE_OF_STL")) {
+    e1.Element("UseOfStl", cmVS10EscapeXML(useOfStl));
+  } else if (const char* stlType =
+        this->GeneratorTarget->GetProperty("ANDROID_STL_TYPE")) {
+    e1.Element("UseOfStl", cmVS10EscapeXML(stlType));
+  }
+}
+
 
 void cmVisualStudio10TargetGenerator::WriteCustomCommands(Elem& e0)
 {
@@ -2243,7 +2287,7 @@ void cmVisualStudio10TargetGenerator::WritePathAndIncrementalLinkOptions(
       if (ttype == cmStateEnums::OBJECT_LIBRARY) {
         outDir = intermediateDir;
         targetNameFull = this->GeneratorTarget->GetName();
-        targetNameFull += ".lib";
+        targetNameFull += this->GeneratorTarget->IsAndroidMDD() ? ".a" : ".lib";
       } else {
         outDir = this->GeneratorTarget->GetDirectory(config) + "/";
         targetNameFull = this->GeneratorTarget->GetFullName(config);
@@ -2503,7 +2547,7 @@ bool cmVisualStudio10TargetGenerator::ComputeClOptions(
 
   // Get preprocessor definitions for this directory.
   std::string defineFlags = this->Makefile->GetDefineFlags();
-  if (this->MSTools) {
+  if (this->MSTools && !this->AndroidMDD) {
     if (this->ProjectType == vcxproj) {
       clOptions.FixExceptionHandlingDefault();
       if (this->GlobalGenerator->GetVersion() >=
@@ -2660,7 +2704,7 @@ void cmVisualStudio10TargetGenerator::WriteClOptions(
     }
   }
 
-  if (this->MSTools) {
+  if (this->MSTools && !this->AndroidMDD) {
     cmsys::RegularExpression clangToolset("v[0-9]+_clang_.*");
     const char* toolset = this->GlobalGenerator->GetPlatformToolset();
     if (toolset && clangToolset.find(toolset)) {
@@ -2745,7 +2789,7 @@ bool cmVisualStudio10TargetGenerator::ComputeRcOptions(
 void cmVisualStudio10TargetGenerator::WriteRCOptions(
   Elem& e1, std::string const& configName)
 {
-  if (!this->MSTools) {
+  if (!this->MSTools || this->AndroidMDD) {
     return;
   }
   Elem e2(e1, "ResourceCompile");
@@ -3012,7 +3056,7 @@ bool cmVisualStudio10TargetGenerator::ComputeMasmOptions(
 void cmVisualStudio10TargetGenerator::WriteMasmOptions(
   Elem& e1, std::string const& configName)
 {
-  if (!this->MSTools || !this->GlobalGenerator->IsMasmEnabled()) {
+  if (!this->MSTools || this->AndroidMDD || !this->GlobalGenerator->IsMasmEnabled()) {
     return;
   }
   Elem e2(e1, "MASM");
@@ -3641,7 +3685,7 @@ void cmVisualStudio10TargetGenerator::AddTargetsFileAndConfigPair(
 void cmVisualStudio10TargetGenerator::WriteMidlOptions(
   Elem& e1, std::string const& configName)
 {
-  if (!this->MSTools) {
+  if (!this->MSTools || this->AndroidMDD) {
     return;
   }
   if (this->ProjectType == csproj) {
@@ -4068,12 +4112,16 @@ void cmVisualStudio10TargetGenerator::WriteApplicationTypeSettings(Elem& e1)
                    this->Name + "_$(Configuration)_$(Platform).xap");
       }
     }
+  } else if (this->AndroidMDD) {
+    e1.Element("ApplicationType", "Android");
+    e1.Element("ApplicationTypeRevision",
+               cmVS10EscapeXML(this->GlobalGenerator->GetAndroidMDDVersion()));
   }
   if (isAppContainer) {
     e1.Element("AppContainerApplication", "true");
   } else if (this->Platform == "ARM64") {
     e1.Element("WindowsSDKDesktopARM64Support", "true");
-  } else if (this->Platform == "ARM") {
+  } else if (this->Platform == "ARM" && !this->AndroidMDD) {
     e1.Element("WindowsSDKDesktopARMSupport", "true");
   }
   std::string const& targetPlatformVersion =

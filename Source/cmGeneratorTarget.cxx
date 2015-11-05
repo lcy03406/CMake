@@ -5928,6 +5928,11 @@ bool cmGeneratorTarget::IsCFBundleOnApple() const
           this->Makefile->IsOn("APPLE") && this->GetPropertyAsBool("BUNDLE"));
 }
 
+bool cmGeneratorTarget::IsAndroidMDD() const
+{
+  return this->Target->IsAndroidMDD();
+}
+
 cmGeneratorTarget::ManagedType cmGeneratorTarget::CheckManagedType(
   std::string const& propval) const
 {

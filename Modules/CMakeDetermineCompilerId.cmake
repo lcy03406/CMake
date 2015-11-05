@@ -280,8 +280,24 @@ Id flags: ${testflags} ${CMAKE_${lang}_COMPILER_ID_FLAGS_ALWAYS}
       endif()
       set(id_Link_AdditionalDependencies "<AdditionalDependencies>cudart.lib</AdditionalDependencies>")
     endif()
-    configure_file(${CMAKE_ROOT}/Modules/CompilerId/VS-${v}.${ext}.in
-      ${id_dir}/CompilerId${lang}.${ext} @ONLY)
+    if(CMAKE_SYSTEM_NAME STREQUAL "VCMDDAndroid")
+      set(id_system "<ApplicationType>Android</ApplicationType>")
+      if(CMAKE_SYSTEM_VERSION)
+        set(id_system_version "<ApplicationTypeRevision>${CMAKE_SYSTEM_VERSION}</ApplicationTypeRevision>")
+      else()
+        set(id_system_version "<ApplicationTypeRevision>1.0</ApplicationTypeRevision>")
+      endif()
+	  if(CMAKE_GENERATOR_TOOLSET)
+        set(id_system_toolset "<PlatformToolset>${CMAKE_GENERATOR_TOOLSET}</PlatformToolset>")
+	  else()
+        set(id_system_toolset )
+	  endif()
+      configure_file(${CMAKE_ROOT}/Modules/CompilerId/VS-Android.${ext}.in
+        ${id_dir}/CompilerId${lang}.${ext} @ONLY)
+    else()
+      configure_file(${CMAKE_ROOT}/Modules/CompilerId/VS-${v}.${ext}.in
+        ${id_dir}/CompilerId${lang}.${ext} @ONLY)
+    endif()
     if(CMAKE_VS_MSBUILD_COMMAND AND NOT lang STREQUAL "Fortran")
       set(command "${CMAKE_VS_MSBUILD_COMMAND}" "CompilerId${lang}.${ext}"
         "/p:Configuration=Debug" "/p:Platform=${id_platform}" "/p:VisualStudioVersion=${vs_version}.0"

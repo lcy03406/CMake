@@ -185,6 +185,7 @@ cmTarget::cmTarget(std::string const& name, cmStateEnums::TargetType type,
   this->HaveInstallRule = false;
   this->DLLPlatform = false;
   this->IsAndroid = false;
+  this->AndroidMDD = false;
   this->IsImportedTarget =
     (vis == VisibilityImported || vis == VisibilityImportedGlobally);
   this->ImportedGloballyVisible = vis == VisibilityImportedGlobally;
@@ -197,6 +198,10 @@ cmTarget::cmTarget(std::string const& name, cmStateEnums::TargetType type,
   // Check whether we are targeting an Android platform.
   this->IsAndroid =
     (this->Makefile->GetSafeDefinition("CMAKE_SYSTEM_NAME") == "Android");
+
+  this->AndroidMDD =
+    (this->Makefile->GetSafeDefinition("CMAKE_SYSTEM_NAME") == "VCMDDAndroid");
+
 
   // Setup default property values.
   if (this->GetType() != cmStateEnums::INTERFACE_LIBRARY &&
@@ -217,6 +222,9 @@ cmTarget::cmTarget(std::string const& name, cmStateEnums::TargetType type,
     this->SetPropertyDefault("ANDROID_JAR_DEPENDENCIES", nullptr);
     this->SetPropertyDefault("ANDROID_ASSETS_DIRECTORIES", nullptr);
     this->SetPropertyDefault("ANDROID_ANT_ADDITIONAL_OPTIONS", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_USE_OF_STL", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_API_LEVEL", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_PLATFORM_TOOLSET", nullptr);
     this->SetPropertyDefault("BUILD_RPATH", nullptr);
     this->SetPropertyDefault("INSTALL_NAME_DIR", nullptr);
     this->SetPropertyDefault("INSTALL_RPATH", "");
