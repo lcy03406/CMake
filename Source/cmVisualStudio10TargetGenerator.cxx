@@ -467,9 +467,9 @@ void cmVisualStudio10TargetGenerator::Generate()
       if (!vsGlobalKeyword) {
         if (!this->AndroidMDD) {
           e1.Element("Keyword", "Win32Proj");
-    } else {
+        } else {
           e1.Element("Keyword", "Android");
-    }
+        }
       } else {
         e1.Element("Keyword", vsGlobalKeyword);
       }
@@ -1221,9 +1221,9 @@ void cmVisualStudio10TargetGenerator::WriteAndroidMDDConfigurationValues(
     e1.Element("UseDebugLibraries", "false");
   }
   cmGlobalVisualStudio10Generator* gg = this->GlobalGenerator;
-  
-  if (const char* toolset =
-        this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_PLATFORM_TOOLSET")) {
+
+  if (const char* toolset = this->GeneratorTarget->GetProperty(
+        "VC_MDD_ANDROID_PLATFORM_TOOLSET")) {
     e1.Element("PlatformToolset", cmVS10EscapeXML(toolset));
   } else if (const char* toolset = gg->GetPlatformToolset()) {
     e1.Element("PlatformToolset", cmVS10EscapeXML(toolset));
@@ -1232,7 +1232,8 @@ void cmVisualStudio10TargetGenerator::WriteAndroidMDDConfigurationValues(
   if (const char* apiLevel =
         this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_API_LEVEL")) {
     e1.Element("AndroidAPILevel", cmVS10EscapeXML(apiLevel));
-  } else if(const char* api = this->GeneratorTarget->GetProperty("ANDROID_API")) {
+  } else if (const char* api =
+               this->GeneratorTarget->GetProperty("ANDROID_API")) {
     e1.Element("AndroidAPILevel", "android-" + std::string(api));
   }
 
@@ -1240,11 +1241,10 @@ void cmVisualStudio10TargetGenerator::WriteAndroidMDDConfigurationValues(
         this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_USE_OF_STL")) {
     e1.Element("UseOfStl", cmVS10EscapeXML(useOfStl));
   } else if (const char* stlType =
-        this->GeneratorTarget->GetProperty("ANDROID_STL_TYPE")) {
+               this->GeneratorTarget->GetProperty("ANDROID_STL_TYPE")) {
     e1.Element("UseOfStl", cmVS10EscapeXML(stlType));
   }
 }
-
 
 void cmVisualStudio10TargetGenerator::WriteCustomCommands(Elem& e0)
 {
@@ -2287,7 +2287,8 @@ void cmVisualStudio10TargetGenerator::WritePathAndIncrementalLinkOptions(
       if (ttype == cmStateEnums::OBJECT_LIBRARY) {
         outDir = intermediateDir;
         targetNameFull = this->GeneratorTarget->GetName();
-        targetNameFull += this->GeneratorTarget->IsAndroidMDD() ? ".a" : ".lib";
+        targetNameFull +=
+          this->GeneratorTarget->IsAndroidMDD() ? ".a" : ".lib";
       } else {
         outDir = this->GeneratorTarget->GetDirectory(config) + "/";
         targetNameFull = this->GeneratorTarget->GetFullName(config);
@@ -2715,8 +2716,8 @@ void cmVisualStudio10TargetGenerator::WriteClOptions(
           this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_CXX_EXCEPTION")) {
       e2.Element("ExceptionHandling", ExceptionHandling);
     }
-    if (const char* PrecompiledHeader =
-          this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_CXX_PCH_ENABLE")) {
+    if (const char* PrecompiledHeader = this->GeneratorTarget->GetProperty(
+          "VC_MDD_ANDROID_CXX_PCH_ENABLE")) {
       e2.Element("PrecompiledHeader", PrecompiledHeader);
     }
     if (const char* PrecompiledHeaderFile =
@@ -3077,7 +3078,8 @@ bool cmVisualStudio10TargetGenerator::ComputeMasmOptions(
 void cmVisualStudio10TargetGenerator::WriteMasmOptions(
   Elem& e1, std::string const& configName)
 {
-  if (!this->MSTools || this->AndroidMDD || !this->GlobalGenerator->IsMasmEnabled()) {
+  if (!this->MSTools || this->AndroidMDD ||
+      !this->GlobalGenerator->IsMasmEnabled()) {
     return;
   }
   Elem e2(e1, "MASM");
@@ -3612,6 +3614,12 @@ void cmVisualStudio10TargetGenerator::WriteLinkOptions(
     OptionsHelper linkOptions(*(this->LinkOptions[config]), e2);
     linkOptions.PrependInheritedString("AdditionalOptions");
     linkOptions.OutputFlagMap();
+    if (this->AndroidMDD) {
+      e2.Element("LibraryDependencies",
+                 "$(StlLibraryName);unwind;atomic;m;log;android");
+      e2.Element("AdditionalOptions",
+                 "-Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libunwind.a");
+    }
   }
 
   if (!this->GlobalGenerator->NeedLinkLibraryDependencies(
