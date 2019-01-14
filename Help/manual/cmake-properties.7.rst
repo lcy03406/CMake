@@ -364,6 +364,11 @@ Properties on Targets
    /prop_tgt/VC_MDD_ANDROID_USE_OF_STL
    /prop_tgt/VC_MDD_ANDROID_API_LEVEL
    /prop_tgt/VC_MDD_ANDROID_PLATFORM_TOOLSET
+   /prop_tgt/VC_MDD_ANDROID_CXX_STD
+   /prop_tgt/VC_MDD_ANDROID_CXX_RTTI
+   /prop_tgt/VC_MDD_ANDROID_CXX_EXCEPTION
+   /prop_tgt/VC_MDD_ANDROID_CXX_PCH_ENABLE
+   /prop_tgt/VC_MDD_ANDROID_CXX_PCH_FILE
 
 .. _`Test Properties`:
 

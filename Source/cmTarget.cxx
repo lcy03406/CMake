@@ -225,6 +225,11 @@ cmTarget::cmTarget(std::string const& name, cmStateEnums::TargetType type,
     this->SetPropertyDefault("VC_MDD_ANDROID_USE_OF_STL", nullptr);
     this->SetPropertyDefault("VC_MDD_ANDROID_API_LEVEL", nullptr);
     this->SetPropertyDefault("VC_MDD_ANDROID_PLATFORM_TOOLSET", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_CXX_STD", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_CXX_RTTI", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_CXX_EXCEPTION", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_CXX_PCH_ENABLE", nullptr);
+    this->SetPropertyDefault("VC_MDD_ANDROID_CXX_PCH_FILE", nullptr);
     this->SetPropertyDefault("BUILD_RPATH", nullptr);
     this->SetPropertyDefault("INSTALL_NAME_DIR", nullptr);
     this->SetPropertyDefault("INSTALL_RPATH", "");

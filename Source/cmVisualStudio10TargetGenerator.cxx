@@ -2702,6 +2702,27 @@ void cmVisualStudio10TargetGenerator::WriteClOptions(
           this->GeneratorTarget->GetProperty("ANDROID_PROCESS_MAX")) {
       e2.Element("ProcessMax", processMax);
     }
+  } else if (this->AndroidMDD) {
+    if (const char* CppLanguageStandard =
+          this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_CXX_STD")) {
+      e2.Element("CppLanguageStandard", CppLanguageStandard);
+    }
+    if (const char* RuntimeTypeInfo =
+          this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_CXX_RTTI")) {
+      e2.Element("RuntimeTypeInfo", RuntimeTypeInfo);
+    }
+    if (const char* ExceptionHandling =
+          this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_CXX_EXCEPTION")) {
+      e2.Element("ExceptionHandling", ExceptionHandling);
+    }
+    if (const char* PrecompiledHeader =
+          this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_CXX_PCH_ENABLE")) {
+      e2.Element("PrecompiledHeader", PrecompiledHeader);
+    }
+    if (const char* PrecompiledHeaderFile =
+          this->GeneratorTarget->GetProperty("VC_MDD_ANDROID_CXX_PCH_FILE")) {
+      e2.Element("PrecompiledHeaderFile", PrecompiledHeaderFile);
+    }
   }
 
   if (this->MSTools && !this->AndroidMDD) {

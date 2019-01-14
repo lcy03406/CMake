@@ -414,11 +414,11 @@ bool cmGlobalVisualStudio10Generator::InitializeSystem(cmMakefile* mf)
     }
   } else if (this->SystemName == "VCMDDAndroid") {
     this->SystemIsAndroidMDD = true;
-    if(!this->InitializeAndroidMDD(mf)) {
+    if (!this->InitializeAndroidMDD(mf)) {
       return false;
     }
-  } else if(this->SystemName == "Android") {
-    if(this->DefaultPlatformName != "Win32") {
+  } else if (this->SystemName == "Android") {
+    if (this->DefaultPlatformName != "Win32") {
       std::ostringstream e;
       e << "CMAKE_SYSTEM_NAME is 'Android' but CMAKE_GENERATOR "
         << "specifies a platform too: '" << this->GetName() << "'";
@@ -480,10 +480,10 @@ bool cmGlobalVisualStudio10Generator::InitializeWindowsStore(cmMakefile* mf)
 
 bool cmGlobalVisualStudio10Generator::InitializeAndroidMDD(cmMakefile* mf)
 {
-    std::ostringstream e;
-    e << this->GetName() << " does not support Android MDD.";
-    mf->IssueMessage(cmake::FATAL_ERROR, e.str());
-    return false;
+  std::ostringstream e;
+  e << this->GetName() << " does not support Android MDD.";
+  mf->IssueMessage(cmake::FATAL_ERROR, e.str());
+  return false;
 }
 
 //----------------------------------------------------------------------------
@@ -773,7 +773,11 @@ bool cmGlobalVisualStudio10Generator::FindVCTargetsPath(cmMakefile* mf)
       epg.Attribute("Label", "Globals");
       cmXMLElement(epg, "ProjectGuid")
         .Content("{F3FC6D86-508D-3FB1-96D2-995F08B142EC}");
-      cmXMLElement(epg, "Keyword").Content("Win32Proj");
+      if (!this->TargetsAndroidMDD()) {
+        cmXMLElement(epg, "Keyword").Content("Win32Proj");
+      } else {
+        cmXMLElement(epg, "Keyword").Content("Android");
+      }
       cmXMLElement(epg, "Platform").Content(this->GetPlatformName());
       if (this->GetSystemName() == "WindowsPhone") {
         cmXMLElement(epg, "ApplicationType").Content("Windows Phone");
@@ -783,6 +787,10 @@ bool cmGlobalVisualStudio10Generator::FindVCTargetsPath(cmMakefile* mf)
         cmXMLElement(epg, "ApplicationType").Content("Windows Store");
         cmXMLElement(epg, "ApplicationTypeRevision")
           .Content(this->GetSystemVersion());
+      } else if (this->TargetsAndroidMDD()) {
+        cmXMLElement(epg, "ApplicationType").Content("Android");
+        cmXMLElement(epg, "ApplicationTypeRevision")
+          .Content(this->GetSystemVersion());
       }
       if (!this->WindowsTargetPlatformVersion.empty()) {
         cmXMLElement(epg, "WindowsTargetPlatformVersion")
@@ -790,7 +798,7 @@ bool cmGlobalVisualStudio10Generator::FindVCTargetsPath(cmMakefile* mf)
       }
       if (this->GetPlatformName() == "ARM64") {
         cmXMLElement(epg, "WindowsSDKDesktopARM64Support").Content("true");
-      } else if (this->GetPlatformName() == "ARM") {
+      } else if (this->GetPlatformName() == "ARM" && !this->TargetsAndroidMDD()) {
         cmXMLElement(epg, "WindowsSDKDesktopARMSupport").Content("true");
       }
     }
@@ -1067,10 +1075,9 @@ std::string cmGlobalVisualStudio10Generator::GetInstalledNsightTegraVersion()
 
 const char* cmGlobalVisualStudio10Generator::GetAndroidMDDVersion()
 {
-  if (this->SystemVersion == "")
-    {
+  if (this->SystemVersion == "") {
     return "1.0";
-    }
+  }
   return this->SystemVersion.c_str();
 }
 
@@ -1080,8 +1087,10 @@ bool cmGlobalVisualStudio10Generator::IsAndroidMDDInstalled()
   std::string installed;
   cmSystemTools::ReadRegistryValue(
     "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\DevDiv\\MDD\\Servicing\\" +
-    ideVersion + "\\CPlusPlusCore;"
-    "Install", installed, cmSystemTools::KeyWOW64_32);
+      ideVersion +
+      "\\CPlusPlusCore;"
+      "Install",
+    installed, cmSystemTools::KeyWOW64_32);
   return installed == "1";
 }
 
